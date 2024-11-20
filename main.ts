@@ -3,7 +3,7 @@ function Update (hello: string) {
     temp2 = HeadPos.get(1) + MoveDir.get(1)
     HeadPos = [temp1, temp2]
     if (HeadPos.get(0) == FruitPos.get(0) && HeadPos.get(1) == FruitPos.get(1)) {
-        led.plotBrightness(HeadPos.get(0), HeadPos.get(1), 255)
+        led.plotBrightness(HeadPos.get(0), HeadPos.get(1), DarkMode * 255)
         FruitPos = NewFruit(FruitPos.get(0), FruitPos.get(1))
         DisplayFruit(FruitPos)
         SnakeBodyPos.unshift(HeadPos)
@@ -15,14 +15,14 @@ SnakeBodyPos.pop()
                 Restart()
             }
             SnakeBodyPos.insertAt(SnakeBodyPos.length, t2)
-            led.unplot(SnakeBodyPos.get(SnakeBodyPos.length - 1).get(0), SnakeBodyPos.get(SnakeBodyPos.length - 1).get(1))
-            led.plotBrightness(HeadPos.get(0), HeadPos.get(1), 255)
+            led.plotBrightness(SnakeBodyPos.get(SnakeBodyPos.length - 1).get(0), SnakeBodyPos.get(SnakeBodyPos.length - 1).get(1), 255 * Math.abs(DarkMode - 1))
+            led.plotBrightness(HeadPos.get(0), HeadPos.get(1), DarkMode * 255)
             SnakeBodyPos.unshift(HeadPos)
             SnakeBodyPos.pop()
         } else {
             // console.log(temp3)
-            led.unplot(SnakeBodyPos.get(SnakeBodyPos.length - 1).get(0), SnakeBodyPos.get(SnakeBodyPos.length - 1).get(1))
-            led.plotBrightness(HeadPos.get(0), HeadPos.get(1), 255)
+            led.plotBrightness(SnakeBodyPos.get(SnakeBodyPos.length - 1).get(0), SnakeBodyPos.get(SnakeBodyPos.length - 1).get(1), 255 * Math.abs(DarkMode - 1))
+            led.plotBrightness(HeadPos.get(0), HeadPos.get(1), DarkMode * 255)
             SnakeBodyPos.unshift(HeadPos)
             SnakeBodyPos.pop()
         }
@@ -42,7 +42,7 @@ function MakeListWithSizeOf (xPos: number, yPos: number, ExcludeX: number, Exclu
 // Define Buttons
 input.onButtonPressed(Button.A, function () {
     if (Playing) {
-        MoveDir = Turn(-1, MoveDir)
+        ButtonPressed = -1
     }
 })
 // Define Functons
@@ -55,6 +55,7 @@ function Turn (By: number, Direction: any[]) {
         temp3 = [Direction.get(1), 0 - Direction.get(0)]
         return temp3
     }
+    return Direction
 }
 function Restart () {
     ResetAllLeds()
@@ -72,10 +73,11 @@ function Restart () {
     SnakeBodyPos.unshift(StartPos)
     MoveDir = [1, 0]
     Playing = false
+    DarkMode = 1
     led.plot(Middle.get(0), Middle.get(1))
 }
 function DisplayFruit (Pos: any[]) {
-    led.plotBrightness(Pos.get(0), Pos.get(1), 63)
+    led.plotBrightness(Pos.get(0), Pos.get(1), (63 * DarkMode) + (125 * Math.abs(DarkMode - 1)))
 }
 function ResetAllLeds () {
     for (let x2 = 0; x2 <= 4; x2++) {
@@ -93,19 +95,24 @@ input.onButtonPressed(Button.AB, function () {
 })
 input.onButtonPressed(Button.B, function () {
     if (Playing) {
-        MoveDir = Turn(1, MoveDir)
+        ButtonPressed = 1
     }
+})
+input.onGesture(Gesture.Shake, function () {
+    led.toggleAll()
+    DarkMode = Math.abs(DarkMode - 1)
+    DisplayFruit(FruitPos)
 })
 function NewFruit (x: number, y: number) {
     t = MakeListWithSizeOf(4, 4, x, y)
     let t1:number[] | undefined
-let candidate: any[]
-while (true) {
+    let candidate: any[]
+    while (true) {
         // t1 = SnakeBodyPos.find(t.get(randint(0, t.length - 1)))
         randomIndex = Math.floor(Math.random() * t.length)
         candidate = t[randomIndex]
         t1 = SnakeBodyPos.find(pos => pos[0] === candidate[0] && pos[1] === candidate[1])
-if (t1 == undefined) {
+    if (t1 == undefined) {
             return candidate
         }
     }
@@ -123,6 +130,8 @@ let temp3: any
 let Middle: any[]
 let RealMiddle: any[]
 let FruitSpawnStart: any[]
+let DarkMode: number
+let ButtonPressed: number
 FruitPos = FruitSpawnStart
 // DisplayFruit(FruitPos)
 StartPos = Middle
@@ -134,6 +143,8 @@ Restart()
 basic.forever(function () {
     if (Playing) {
         basic.pause(1000)
+        MoveDir = Turn(ButtonPressed, MoveDir)
+        ButtonPressed = 0
         Update("Hi")
         if (HeadPos.get(0) <= -1 || HeadPos.get(0) >= 5 || HeadPos.get(1) <= -1 || HeadPos.get(1) >= 5) {
             Restart()
