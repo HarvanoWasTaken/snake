@@ -66,6 +66,7 @@ function Restart () {
     RealMiddle = [1, 2]
     FruitSpawnStart = [3, 2]
     FruitPos = FruitSpawnStart
+    DarkMode = 1
     DisplayFruit(FruitPos)
     StartPos = Middle
     HeadPos = StartPos
@@ -73,7 +74,6 @@ function Restart () {
     SnakeBodyPos.unshift(StartPos)
     MoveDir = [1, 0]
     Playing = false
-    DarkMode = 1
     led.plot(Middle.get(0), Middle.get(1))
 }
 function DisplayFruit (Pos: any[]) {
